@@ -77,20 +77,20 @@ app.post('/voters/register', async (req, res) => {
 
 // Search for a voter by voterId and track searched voters
 app.get('/voters/search/:voterId', async (req, res) => {
-    try {
-      const { voterId } = req.params;  // Access the voterId from URL parameters
-      const voter = await Voter.findOne({ voterId });
-      if (!voter) return res.status(404).json({ message: 'Voter not found' });
-  
-      // Track searched voters
-      await SearchedVoter.deleteMany({});
-      await new SearchedVoter({ voter: voter._id }).save();
-  
-      res.json(voter);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  });
+  try {
+    const { voterId } = req.params;  
+    const voter = await Voter.findOne({ voterId });
+    if (!voter) return res.status(404).json({ message: 'Voter not found' });
+
+    // Track searched voters
+    await SearchedVoter.deleteMany({});
+    await new SearchedVoter({ voter: voter._id }).save();
+
+    res.json(voter);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Fetch the searched voter
 app.get('/voters/searched', async (req, res) => {
@@ -166,6 +166,9 @@ app.post('/voters/vote', async (req, res) => {
 
     candidate.votes += 1;
     await candidate.save();
+
+    // Clear the searched voter data after voting
+    await SearchedVoter.deleteMany({});
 
     // Broadcast vote update
     await broadcastVoteUpdate();
